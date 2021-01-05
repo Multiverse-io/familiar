@@ -55,6 +55,16 @@ defmodule Viewex do
     end
   end
 
+  def drop_view(view_name) do
+    view_name = normalise_view_name(view_name)
+    Ecto.Migration.execute(drop_sql(view_name))
+  end
+
+  def drop_view_if_exists(view_name) do
+    view_name = normalise_view_name(view_name)
+    Ecto.Migration.execute("DROP VIEW IF EXISTS #{view_name};")
+  end
+
   defp normalise_view_name(view_name) do
     "#{view_name}"
   end
