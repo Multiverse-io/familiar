@@ -12,7 +12,7 @@ defmodule Viewex do
 
     new_sql = read_file(view_name, version)
 
-    Ecto.Migration.execute(create_sql(view_name, new_sql), drop_sql(view_name))
+    execute(create_sql(view_name, new_sql), drop_sql(view_name))
   end
 
   def update_view(view_name, opts) do
@@ -26,12 +26,12 @@ defmodule Viewex do
     if revert do
       old_sql = read_file(view_name, revert)
 
-      Ecto.Migration.execute(
-        fn -> drop_and_create(view_name, new_sql) end,
-        fn -> drop_and_create(view_name, old_sql) end
+      execute(
+        drop_and_create(view_name, new_sql),
+        drop_and_create(view_name, old_sql)
       )
     else
-      Ecto.Migration.execute(fn -> drop_and_create(view_name, new_sql) end)
+      execute(drop_and_create(view_name, new_sql))
     end
   end
 
@@ -46,23 +46,20 @@ defmodule Viewex do
     if revert do
       old_sql = read_file(view_name, revert)
 
-      Ecto.Migration.execute(
-        replace_sql(view_name, new_sql),
-        replace_sql(view_name, old_sql)
-      )
+      execute(replace_sql(view_name, new_sql), replace_sql(view_name, old_sql))
     else
-      Ecto.Migration.execute(fn -> replace_sql(view_name, new_sql) end)
+      execute(replace_sql(view_name, new_sql))
     end
   end
 
   def drop_view(view_name) do
     view_name = normalise_view_name(view_name)
-    Ecto.Migration.execute(drop_sql(view_name))
+    execute(drop_sql(view_name))
   end
 
   def drop_view_if_exists(view_name) do
     view_name = normalise_view_name(view_name)
-    Ecto.Migration.execute("DROP VIEW IF EXISTS #{view_name};")
+    execute("DROP VIEW IF EXISTS #{view_name};")
   end
 
   defp normalise_view_name(view_name) do
@@ -70,8 +67,27 @@ defmodule Viewex do
   end
 
   defp drop_and_create(view_name, sql) do
-    Ecto.Migration.repo().query!(drop_sql(view_name))
-    Ecto.Migration.repo().query!(create_sql(view_name, sql))
+    [drop_sql(view_name), create_sql(view_name, sql)]
+  end
+
+  defp execute(sql) do
+    Ecto.Migration.execute(wrap(sql))
+  end
+
+  defp execute(up, down) do
+    Ecto.Migration.execute(wrap(up), wrap(down))
+  end
+
+  defp wrap(statements) when is_list(statements) do
+    fn ->
+      for sql <- statements do
+        Ecto.Migration.repo().query!(sql)
+      end
+    end
+  end
+
+  defp wrap(sql) do
+    fn -> Ecto.Migration.repo().query!(sql) end
   end
 
   defp create_sql(view_name, sql) do
