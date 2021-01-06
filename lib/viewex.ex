@@ -7,11 +7,9 @@ defmodule Viewex do
 
   def create_view(view_name, opts) do
     view_name = normalise_view_name(view_name)
-
     version = Keyword.fetch!(opts, :version)
 
     new_sql = read_file(view_name, version)
-
     execute(create_sql(view_name, new_sql), drop_sql(view_name))
   end
 
