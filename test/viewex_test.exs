@@ -56,7 +56,7 @@ defmodule ViewexTest do
     test "can update view" do
       forwards(fn ->
         Viewex.create_view(:chickens, version: 1)
-        Viewex.update_view(:chickens, to: 2)
+        Viewex.update_view(:chickens, version: 2)
       end)
 
       view = get_view_def("chickens")
@@ -69,7 +69,7 @@ defmodule ViewexTest do
       end)
 
       backwards(fn ->
-        Viewex.update_view(:chickens, to: 2, revert: 1)
+        Viewex.update_view(:chickens, version: 2, revert: 1)
       end)
 
       view = get_view_def("chickens")

@@ -16,10 +16,10 @@ defmodule Viewex do
   def update_view(view_name, opts) do
     view_name = normalise_view_name(view_name)
 
-    to = Keyword.fetch!(opts, :to)
+    version = Keyword.fetch!(opts, :version)
     revert = Keyword.get(opts, :revert)
 
-    new_sql = read_file(view_name, to)
+    new_sql = read_file(view_name, version)
 
     if revert do
       old_sql = read_file(view_name, revert)
@@ -36,10 +36,10 @@ defmodule Viewex do
   def replace_view(view_name, opts) do
     view_name = normalise_view_name(view_name)
 
-    to = Keyword.fetch!(opts, :with)
+    version = Keyword.fetch!(opts, :version)
     revert = Keyword.get(opts, :revert)
 
-    new_sql = read_file(view_name, to)
+    new_sql = read_file(view_name, version)
 
     if revert do
       old_sql = read_file(view_name, revert)

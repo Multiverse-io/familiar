@@ -3,6 +3,6 @@ defmodule Viewex.Repo.Migrations.UpdateViews do
   use Viewex
 
   def change do
-    replace_view :chickens, with: 2, revert: 1
+    replace_view :chickens, version: 2, revert: 1
   end
 end
