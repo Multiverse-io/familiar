@@ -48,7 +48,7 @@ defmodule ViewexTest do
         Viewex.create_view(:chickens, version: 1)
       end)
 
-      refute view_exists?("horses")
+      refute view_exists?("chickens")
     end
   end
 
@@ -70,6 +70,51 @@ defmodule ViewexTest do
 
       backwards(fn ->
         Viewex.update_view(:chickens, version: 2, revert: 1)
+      end)
+
+      view = get_view_def("chickens")
+      assert view =~ "WHERE animals.species::text = 'chicken'::text;"
+    end
+  end
+
+  describe "replace_view" do
+    test "can replace a view" do
+      forwards(fn ->
+        Viewex.create_view(:chickens, version: 1)
+        Viewex.replace_view(:chickens, version: 2)
+      end)
+
+      view = get_view_def("chickens")
+      assert view =~ "WHERE animals.species::text = 'chicken'::text AND animals.alive = true;"
+    end
+
+    test "can revert replacing view" do
+      forwards(fn ->
+        Viewex.create_view(:chickens, version: 2)
+      end)
+
+      backwards(fn ->
+        Viewex.replace_view(:chickens, version: 2, revert: 1)
+      end)
+
+      view = get_view_def("chickens")
+      assert view =~ "WHERE animals.species::text = 'chicken'::text;"
+    end
+  end
+
+  describe "drop_view" do
+    test "can drop view" do
+      forwards(fn ->
+        Viewex.create_view(:chickens, version: 1)
+        Viewex.drop_view(:chickens)
+      end)
+
+      refute view_exists?("chickens")
+    end
+
+    test "can revert dropping a view" do
+      backwards(fn ->
+        Viewex.drop_view(:chickens, revert: 1)
       end)
 
       view = get_view_def("chickens")

@@ -50,9 +50,16 @@ defmodule Viewex do
     end
   end
 
-  def drop_view(view_name) do
+  def drop_view(view_name, opts \\ []) do
+    revert = Keyword.get(opts, :revert)
     view_name = normalise_view_name(view_name)
-    execute(drop_sql(view_name))
+
+    if revert do
+      sql = read_file(view_name, revert)
+      execute(drop_sql(view_name), create_sql(view_name, sql))
+    else
+      execute(drop_sql(view_name))
+    end
   end
 
   def drop_view_if_exists(view_name) do
