@@ -1,4 +1,4 @@
-defmodule Viewex.Repo.Migrations.CreateTables do
+defmodule Familiar.Repo.Migrations.CreateTables do
   use Ecto.Migration
 
   def change do

@@ -1,6 +1,7 @@
-defmodule Mix.Tasks.Viewex.Gen.View do
+defmodule Mix.Tasks.Familiar.Gen.View do
   use Mix.Task
   import Mix.Generator
+  import Mix.Ecto
 
   @switches [
     version: :integer
@@ -8,13 +9,17 @@ defmodule Mix.Tasks.Viewex.Gen.View do
 
   @impl true
   def run(args) do
+    no_umbrella!("familiar.gen.view")
+    repos = parse_repo(args)
+
     case OptionParser.parse!(args, strict: @switches) do
       {opts, [name]} ->
         version = get_version(name, opts)
 
         filename = "#{name}_v#{version}.sql"
+        dir = Path.join(source_repo_priv(hd(repos)), "views")
 
-        path = "#{dir()}/#{filename}"
+        path = "#{dir}/#{filename}"
         create_file path, ""
     end
   end
@@ -29,9 +34,5 @@ defmodule Mix.Tasks.Viewex.Gen.View do
         String.match?(filename, ~r|^#{name}_v\d+\.sql$|)
       end)
     end
-  end
-
-  defp dir do
-    Application.app_dir(:viewex, "priv/repo/views/")
   end
 end

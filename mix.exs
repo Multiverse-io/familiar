@@ -1,9 +1,9 @@
-defmodule Viewex.MixProject do
+defmodule Familiar.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :viewex,
+      app: :familiar,
       version: "0.1.0",
       elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),

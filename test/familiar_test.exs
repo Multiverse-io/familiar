@@ -1,8 +1,8 @@
-defmodule ViewexTest do
+defmodule FamiliarTest do
   use ExUnit.Case
   use Ecto.Migration
   alias Ecto.Migration.Runner
-  alias Viewex.Repo
+  alias Familiar.Repo
 
   setup do
     Repo.start_link()
@@ -23,7 +23,7 @@ defmodule ViewexTest do
   describe "create_view" do
     test "can create view v1" do
       forwards(fn ->
-        Viewex.create_view(:chickens, version: 1)
+        Familiar.create_view(:chickens, version: 1)
       end)
 
       view = get_view_def("chickens")
@@ -32,7 +32,7 @@ defmodule ViewexTest do
 
     test "can create view v2" do
       forwards(fn ->
-        Viewex.create_view(:chickens, version: 2)
+        Familiar.create_view(:chickens, version: 2)
       end)
 
       view = get_view_def("chickens")
@@ -41,11 +41,11 @@ defmodule ViewexTest do
 
     test "can revert create view" do
       forwards(fn ->
-        Viewex.create_view(:chickens, version: 1)
+        Familiar.create_view(:chickens, version: 1)
       end)
 
       backwards(fn ->
-        Viewex.create_view(:chickens, version: 1)
+        Familiar.create_view(:chickens, version: 1)
       end)
 
       refute view_exists?("chickens")
@@ -55,8 +55,8 @@ defmodule ViewexTest do
   describe "update_view" do
     test "can update view" do
       forwards(fn ->
-        Viewex.create_view(:chickens, version: 1)
-        Viewex.update_view(:chickens, version: 2)
+        Familiar.create_view(:chickens, version: 1)
+        Familiar.update_view(:chickens, version: 2)
       end)
 
       view = get_view_def("chickens")
@@ -65,11 +65,11 @@ defmodule ViewexTest do
 
     test "can revert updating view" do
       forwards(fn ->
-        Viewex.create_view(:chickens, version: 2)
+        Familiar.create_view(:chickens, version: 2)
       end)
 
       backwards(fn ->
-        Viewex.update_view(:chickens, version: 2, revert: 1)
+        Familiar.update_view(:chickens, version: 2, revert: 1)
       end)
 
       view = get_view_def("chickens")
@@ -80,8 +80,8 @@ defmodule ViewexTest do
   describe "replace_view" do
     test "can replace a view" do
       forwards(fn ->
-        Viewex.create_view(:chickens, version: 1)
-        Viewex.replace_view(:chickens, version: 2)
+        Familiar.create_view(:chickens, version: 1)
+        Familiar.replace_view(:chickens, version: 2)
       end)
 
       view = get_view_def("chickens")
@@ -90,11 +90,11 @@ defmodule ViewexTest do
 
     test "can revert replacing view" do
       forwards(fn ->
-        Viewex.create_view(:chickens, version: 2)
+        Familiar.create_view(:chickens, version: 2)
       end)
 
       backwards(fn ->
-        Viewex.replace_view(:chickens, version: 2, revert: 1)
+        Familiar.replace_view(:chickens, version: 2, revert: 1)
       end)
 
       view = get_view_def("chickens")
@@ -105,8 +105,8 @@ defmodule ViewexTest do
   describe "drop_view" do
     test "can drop view" do
       forwards(fn ->
-        Viewex.create_view(:chickens, version: 1)
-        Viewex.drop_view(:chickens)
+        Familiar.create_view(:chickens, version: 1)
+        Familiar.drop_view(:chickens)
       end)
 
       refute view_exists?("chickens")
@@ -114,7 +114,7 @@ defmodule ViewexTest do
 
     test "can revert dropping a view" do
       backwards(fn ->
-        Viewex.drop_view(:chickens, revert: 1)
+        Familiar.drop_view(:chickens, revert: 1)
       end)
 
       view = get_view_def("chickens")

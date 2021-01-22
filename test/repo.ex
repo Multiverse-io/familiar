@@ -1,5 +1,5 @@
-defmodule Viewex.Repo do
+defmodule Familiar.Repo do
   use Ecto.Repo,
-    otp_app: :viewex,
+    otp_app: :familiar,
     adapter: Ecto.Adapters.Postgres
 end

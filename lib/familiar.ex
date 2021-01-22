@@ -1,7 +1,7 @@
-defmodule Viewex do
+defmodule Familiar do
   defmacro __using__(_opts) do
     quote do
-      import Viewex
+      import Familiar
     end
   end
 
@@ -62,11 +62,6 @@ defmodule Viewex do
     end
   end
 
-  def drop_view_if_exists(view_name) do
-    view_name = normalise_view_name(view_name)
-    execute("DROP VIEW IF EXISTS #{view_name};")
-  end
-
   defp normalise_view_name(view_name) do
     "#{view_name}"
   end
@@ -112,6 +107,6 @@ defmodule Viewex do
   end
 
   defp view_dir do
-    Application.app_dir(:viewex, "priv/repo/views/")
+    Application.app_dir(:familiar, "priv/repo/views/")
   end
 end

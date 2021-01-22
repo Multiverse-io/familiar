@@ -1,6 +1,6 @@
-defmodule Viewex.Repo.Migrations.CreateViews do
+defmodule Familiar.Repo.Migrations.CreateViews do
   use Ecto.Migration
-  use Viewex
+  use Familiar
 
   def change do
     create_view "chickens", version: 1

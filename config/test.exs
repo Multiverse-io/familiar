@@ -1,11 +1,11 @@
 use Mix.Config
 
-config :viewex,
-  ecto_repos: [Viewex.Repo]
+config :familiar,
+  ecto_repos: [Familiar.Repo]
 
-config :viewex, Viewex.Repo,
+config :familiar, Familiar.Repo,
   username: "postgres",
   password: "postgres",
-  database: "viewex_test",
+  database: "familiar_test",
   hostname: System.get_env("PGHOST") || "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
