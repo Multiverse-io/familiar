@@ -6,16 +6,20 @@ defmodule Familiar do
   end
 
   def create_view(view_name, opts) do
-    view_name = normalise_view_name(view_name)
+    view_name = normalise_name(view_name)
     version = Keyword.fetch!(opts, :version)
     materialized = Keyword.get(opts, :materialized, false)
 
     new_sql = read_file(view_name, version)
-    execute(create_sql(view_name, new_sql, materialized), drop_sql(view_name, materialized))
+
+    execute(
+      create_view_sql(view_name, new_sql, materialized),
+      drop_view_sql(view_name, materialized)
+    )
   end
 
   def update_view(view_name, opts) do
-    view_name = normalise_view_name(view_name)
+    view_name = normalise_name(view_name)
 
     version = Keyword.fetch!(opts, :version)
     materialized = Keyword.get(opts, :materialized, false)
@@ -27,16 +31,16 @@ defmodule Familiar do
       old_sql = read_file(view_name, revert)
 
       execute(
-        drop_and_create(view_name, new_sql, materialized),
-        drop_and_create(view_name, old_sql, materialized)
+        drop_and_create_view(view_name, new_sql, materialized),
+        drop_and_create_view(view_name, old_sql, materialized)
       )
     else
-      execute(drop_and_create(view_name, new_sql, materialized))
+      execute(drop_and_create_view(view_name, new_sql, materialized))
     end
   end
 
   def replace_view(view_name, opts) do
-    view_name = normalise_view_name(view_name)
+    view_name = normalise_name(view_name)
 
     version = Keyword.fetch!(opts, :version)
     revert = Keyword.get(opts, :revert)
@@ -46,31 +50,35 @@ defmodule Familiar do
     if revert do
       old_sql = read_file(view_name, revert)
 
-      execute(replace_sql(view_name, new_sql), replace_sql(view_name, old_sql))
+      execute(replace_view_sql(view_name, new_sql), replace_view_sql(view_name, old_sql))
     else
-      execute(replace_sql(view_name, new_sql))
+      execute(replace_view_sql(view_name, new_sql))
     end
   end
 
   def drop_view(view_name, opts \\ []) do
     revert = Keyword.get(opts, :revert)
-    view_name = normalise_view_name(view_name)
+    view_name = normalise_name(view_name)
     materialized = Keyword.get(opts, :materialized, false)
 
     if revert do
       sql = read_file(view_name, revert)
-      execute(drop_sql(view_name, materialized), create_sql(view_name, sql, materialized))
+
+      execute(
+        drop_view_sql(view_name, materialized),
+        create_view_sql(view_name, sql, materialized)
+      )
     else
-      execute(drop_sql(view_name, materialized))
+      execute(drop_view_sql(view_name, materialized))
     end
   end
 
-  defp normalise_view_name(view_name) do
+  defp normalise_name(view_name) do
     "#{view_name}"
   end
 
-  defp drop_and_create(view_name, sql, materialized) do
-    [drop_sql(view_name, materialized), create_sql(view_name, sql, materialized)]
+  defp drop_and_create_view(view_name, sql, materialized) do
+    [drop_view_sql(view_name, materialized), create_view_sql(view_name, sql, materialized)]
   end
 
   defp execute(sql) do
@@ -93,24 +101,18 @@ defmodule Familiar do
     fn -> Ecto.Migration.repo().query!(sql) end
   end
 
-  defp create_sql(view_name, sql, materialized) do
-    if materialized do
-      "CREATE MATERIALIZED VIEW #{view_name} AS #{sql};"
-    else
-      "CREATE VIEW #{view_name} AS #{sql};"
-    end
+  defp create_view_sql(view_name, sql, materialized) do
+    m = if materialized, do: "MATERIALIZED", else: ""
+    "CREATE #{m} VIEW #{view_name} AS #{sql};"
   end
 
-  defp replace_sql(view_name, sql) do
+  defp replace_view_sql(view_name, sql) do
     "CREATE OR REPLACE VIEW #{view_name} AS #{sql};"
   end
 
-  defp drop_sql(view_name, materialized) do
-    if materialized do
-      "DROP MATERIALIZED VIEW #{view_name};"
-    else
-      "DROP VIEW #{view_name};"
-    end
+  defp drop_view_sql(view_name, materialized) do
+    m = if materialized, do: "MATERIALIZED", else: ""
+    "DROP #{m} VIEW #{view_name};"
   end
 
   defp read_file(view_name, version) do
