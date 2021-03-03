@@ -8,6 +8,7 @@ defmodule FamiliarTest do
   setup do
     query!("DROP SCHEMA public CASCADE")
     query!("CREATE SCHEMA public")
+
     query!("""
     CREATE TABLE animals (
       species varchar(255) NOT NULL,
@@ -27,7 +28,7 @@ defmodule FamiliarTest do
 
       view = get_view_def("chickens")
       assert view =~ "WHERE animals.species::text = 'chicken'::text;"
-      refute is_materialized_view?("chickens")
+      refute materialized_view_exists?("chickens")
     end
 
     test "can create view v2" do
@@ -56,7 +57,7 @@ defmodule FamiliarTest do
         Familiar.create_view(:chickens, version: 1, materialized: true)
       end)
 
-      assert is_materialized_view?("chickens")
+      assert materialized_view_exists?("chickens")
     end
   end
 
@@ -69,7 +70,7 @@ defmodule FamiliarTest do
 
       view = get_view_def("chickens")
       assert view =~ "WHERE animals.species::text = 'chicken'::text AND animals.alive = true;"
-      refute is_materialized_view?("chickens")
+      refute materialized_view_exists?("chickens")
     end
 
     test "can revert updating view" do
@@ -93,7 +94,7 @@ defmodule FamiliarTest do
 
       view = get_view_def("chickens")
       assert view =~ "WHERE animals.species::text = 'chicken'::text AND animals.alive = true;"
-      assert is_materialized_view?("chickens")
+      assert materialized_view_exists?("chickens")
     end
   end
 
@@ -155,10 +156,47 @@ defmodule FamiliarTest do
         Familiar.drop_view(:chickens, revert: 1, materialized: true)
       end)
 
-      assert view_exists?("chickens")
-      assert is_materialized_view?("chickens")
+      assert materialized_view_exists?("chickens")
     end
   end
+
+  describe "create_function" do
+    test "can create function" do
+      forwards(fn ->
+        Familiar.create_function(:mix, version: 1)
+      end)
+
+      get_function_def("mix") =~ "select $1 + $2"
+
+      assert function_exists?("mix")
+    end
+
+    test "can create function v2" do
+      forwards(fn ->
+        Familiar.create_function(:mix, version: 2)
+      end)
+
+      get_function_def("mix") =~ "select $1 * $2"
+
+      assert function_exists?("mix")
+    end
+
+    test "can revert creating function" do
+      forwards(fn ->
+        Familiar.create_function(:mix, version: 1)
+      end)
+
+      backwards(fn ->
+        Familiar.create_function(:mix, version: 1)
+      end)
+
+      refute function_exists?("mix")
+    end
+  end
+
+  test "update_function"
+  test "replace_function"
+  test "drop_function"
 
   defp forwards(code) do
     run(code, :forward)
@@ -170,10 +208,9 @@ defmodule FamiliarTest do
 
   defp run(code, direction) do
     log = %{level: false, sql: false}
+
     {:ok, runner} =
-      Runner.start_link(
-        {self(), Repo, Repo.config(), __MODULE__, direction, :up, log}
-      )
+      Runner.start_link({self(), Repo, Repo.config(), __MODULE__, direction, :up, log})
 
     Runner.metadata(runner, %{})
     code.()
@@ -186,13 +223,27 @@ defmodule FamiliarTest do
     definition
   end
 
-  defp view_exists?(view_name) do
-    %{rows: [[result]]} = query!("SELECT to_regclass('public.#{view_name}')")
-    result
+  defp get_function_def(function_name) do
+    %{rows: [[definition]]} =
+      query!("SELECT pg_get_functiondef(oid) FROM pg_proc WHERE proname = '#{function_name}'")
+
+    definition
   end
 
-  defp is_materialized_view?(view_name) do
-    Repo.exists?(from mv in "pg_matviews", where: mv.matviewname == ^view_name)
+  defp view_exists?(view_name) do
+    Repo.exists?(
+      from(v in "pg_views", where: v.viewname == ^view_name and v.schemaname == "public")
+    )
+  end
+
+  defp materialized_view_exists?(view_name) do
+    Repo.exists?(
+      from(mv in "pg_matviews", where: mv.matviewname == ^view_name and mv.schemaname == "public")
+    )
+  end
+
+  defp function_exists?(function_name) do
+    Repo.exists?(from(p in "pg_proc", where: p.proname == ^function_name))
   end
 
   defp query!(sql) do

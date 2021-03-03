@@ -10,7 +10,7 @@ defmodule Familiar do
     version = Keyword.fetch!(opts, :version)
     materialized = Keyword.get(opts, :materialized, false)
 
-    new_sql = read_file(view_name, version)
+    new_sql = read_file(:views, view_name, version)
 
     execute(
       create_view_sql(view_name, new_sql, materialized),
@@ -25,10 +25,10 @@ defmodule Familiar do
     materialized = Keyword.get(opts, :materialized, false)
     revert = Keyword.get(opts, :revert)
 
-    new_sql = read_file(view_name, version)
+    new_sql = read_file(:views, view_name, version)
 
     if revert do
-      old_sql = read_file(view_name, revert)
+      old_sql = read_file(:views, view_name, revert)
 
       execute(
         drop_and_create_view(view_name, new_sql, materialized),
@@ -45,10 +45,10 @@ defmodule Familiar do
     version = Keyword.fetch!(opts, :version)
     revert = Keyword.get(opts, :revert)
 
-    new_sql = read_file(view_name, version)
+    new_sql = read_file(:views, view_name, version)
 
     if revert do
-      old_sql = read_file(view_name, revert)
+      old_sql = read_file(:views, view_name, revert)
 
       execute(replace_view_sql(view_name, new_sql), replace_view_sql(view_name, old_sql))
     else
@@ -62,7 +62,7 @@ defmodule Familiar do
     materialized = Keyword.get(opts, :materialized, false)
 
     if revert do
-      sql = read_file(view_name, revert)
+      sql = read_file(:views, view_name, revert)
 
       execute(
         drop_view_sql(view_name, materialized),
@@ -73,12 +73,60 @@ defmodule Familiar do
     end
   end
 
-  defp normalise_name(view_name) do
-    "#{view_name}"
+  def create_function(function_name, opts) do
+    function_name = normalise_name(function_name)
+
+    version = Keyword.fetch!(opts, :version)
+    new_sql = read_file(:functions, function_name, version)
+
+    execute(
+      create_function_sql(function_name, new_sql),
+      drop_function_sql(function_name)
+    )
   end
 
-  defp drop_and_create_view(view_name, sql, materialized) do
-    [drop_view_sql(view_name, materialized), create_view_sql(view_name, sql, materialized)]
+  def update_function(function_name, opts) do
+    function_name = normalise_name(function_name)
+
+    version = Keyword.fetch!(opts, :version)
+    revert = Keyword.get(opts, :revert)
+
+    new_sql = read_file(:functions, function_name, version)
+
+    if revert do
+      old_sql = read_file(:functions, function_name, revert)
+
+      execute(
+        drop_and_create_function(function_name, new_sql),
+        drop_and_create_function(function_name, old_sql)
+      )
+    else
+      execute(drop_and_create_function(function_name, new_sql))
+    end
+  end
+
+  def replace_function(function_name, opts) do
+    function_name = normalise_name(function_name)
+
+    version = Keyword.fetch!(opts, :version)
+    revert = Keyword.get(opts, :revert)
+
+    new_sql = read_file(:functions, function_name, version)
+
+    if revert do
+      old_sql = read_file(:functions, function_name, revert)
+
+      execute(
+        replace_function_sql(function_name, new_sql),
+        replace_function_sql(function_name, old_sql)
+      )
+    else
+      execute(replace_function_sql(function_name, new_sql))
+    end
+  end
+
+  defp normalise_name(view_name) do
+    "#{view_name}"
   end
 
   defp execute(sql) do
@@ -115,12 +163,32 @@ defmodule Familiar do
     "DROP #{m} VIEW #{view_name};"
   end
 
-  defp read_file(view_name, version) do
-    File.read!(view_dir() <> "/#{view_name}_v#{version}.sql")
+  defp drop_and_create_view(view_name, sql, materialized) do
+    [drop_view_sql(view_name, materialized), create_view_sql(view_name, sql, materialized)]
   end
 
-  defp view_dir do
+  defp create_function_sql(function_name, sql) do
+    "CREATE FUNCTION #{function_name} #{sql};"
+  end
+
+  defp replace_function_sql(function_name, sql) do
+    "CREATE OR REPLACE FUNCTION #{function_name} #{sql};"
+  end
+
+  defp drop_function_sql(function_name) do
+    "DROP FUNCTION #{function_name}"
+  end
+
+  defp drop_and_create_function(function_name, sql) do
+    [drop_function_sql(function_name), create_function_sql(function_name, sql)]
+  end
+
+  defp read_file(type, view_name, version) do
+    File.read!(make_dir(type) <> "/#{view_name}_v#{version}.sql")
+  end
+
+  defp make_dir(type) do
     otp_app = Ecto.Migration.repo().config()[:otp_app]
-    Application.app_dir(otp_app, "priv/repo/views/")
+    Application.app_dir(otp_app, "priv/repo/#{type}/")
   end
 end
