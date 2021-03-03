@@ -107,6 +107,7 @@ defmodule Familiar do
   end
 
   defp view_dir do
-    Application.app_dir(:familiar, "priv/repo/views/")
+    otp_app = Ecto.Migration.repo().config()[:otp_app]
+    Application.app_dir(otp_app, "priv/repo/views/")
   end
 end

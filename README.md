@@ -1,11 +1,46 @@
 # Familiar
 
-**TODO: Add description**
+An Elixir library to manage database views, functions and triggers - your database's familiars.
+
+Creating a view is as simple as defining it in SQL and then creating it in a migration.
+
+``` sql
+-- priv/repo/views/active_users_v1.sql
+SELECT * FROM users
+WHERE users.active
+```
+
+``` elixir
+# priv/repo/migrations/create_users_view.exs
+
+defmodule Sample.Repo.Migrations.CreateViews do
+  use Ecto.Migration
+  use Familiar
+
+  def change do
+    create_view "active_users", version: 1
+  end
+end
+```
+
+To update a view, simply create a new view definition and replace it
+``` sql
+-- priv/repo/views/active_users_v2.sql
+SELECT * FROM users
+WHERE users.deactivated_at IS NULL
+```
+
+``` elixir
+# priv/repo/migrations/create_users_view.exs
+  def change do
+    replace_view "active_users", version: 2, revert: 1
+  end
+```
+
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `familiar` to your list of dependencies in `mix.exs`:
+Familiar can be installed by adding `familiar` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -14,8 +49,3 @@ def deps do
   ]
 end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/familiar](https://hexdocs.pm/familiar).
-
