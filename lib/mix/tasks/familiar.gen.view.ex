@@ -2,6 +2,7 @@ defmodule Mix.Tasks.Familiar.Gen.View do
   use Mix.Task
   import Mix.Generator
   import Mix.Ecto
+  import Mix.EctoSQL
 
   @switches [
     version: :integer
@@ -14,25 +15,37 @@ defmodule Mix.Tasks.Familiar.Gen.View do
 
     case OptionParser.parse!(args, strict: @switches) do
       {opts, [name]} ->
-        version = get_version(name, opts)
-
-        filename = "#{name}_v#{version}.sql"
         dir = Path.join(source_repo_priv(hd(repos)), "views")
 
+        {version, contents} = get_version(name, dir, opts)
+        filename = "#{name}_v#{version}.sql"
+
         path = "#{dir}/#{filename}"
-        create_file path, ""
+        create_file(path, contents)
     end
   end
 
-  defp get_version(name, opts) do
+  defp get_version(name, dir, opts) do
     if version = Keyword.get(opts, :version) do
-      version
+      {version, ""}
     else
-      possible_views = Path.wildcard("#{dir()}/#{name}_v*")
+      possible_views = Path.wildcard("#{dir}/#{name}_v*")
 
-      views = Enum.flat_map(possible_views, fn filename ->
-        String.match?(filename, ~r|^#{name}_v\d+\.sql$|)
-      end)
+      versions =
+        Enum.flat_map(possible_views, fn filename ->
+          case Regex.run(~r|#{name}_v(\d+).sql$|, filename) do
+            [_, v] -> [{filename, String.to_integer(v)}]
+            _ -> []
+          end
+        end)
+
+      if versions == [] do
+        {1, ""}
+      else
+        {filename, version} = Enum.max_by(versions, &elem(&1, 1))
+        old_contents = File.read!(filename)
+        {version + 1, old_contents}
+      end
     end
   end
 end
