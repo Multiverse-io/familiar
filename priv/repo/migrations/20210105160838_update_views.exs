@@ -3,6 +3,6 @@ defmodule Familiar.Repo.Migrations.UpdateViews do
   use Familiar
 
   def change do
-    replace_view :chickens, version: 2, revert: 1
+    update_view :chickens, version: 2, revert: 1, materialized: true
   end
 end

@@ -1,5 +1,8 @@
 use Mix.Config
 
+config :familiar,
+  ecto_repos: [Familiar.Repo]
+
 config :familiar, Familiar.Repo,
   username: "postgres",
   password: "postgres",

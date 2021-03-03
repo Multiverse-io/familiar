@@ -3,6 +3,6 @@ defmodule Familiar.Repo.Migrations.CreateViews do
   use Familiar
 
   def change do
-    create_view "chickens", version: 1
+    create_view "chickens", version: 1, materialized: true
   end
 end
