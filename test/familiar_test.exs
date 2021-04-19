@@ -166,8 +166,7 @@ defmodule FamiliarTest do
         Familiar.create_function(:mix, version: 1)
       end)
 
-      get_function_def("mix") =~ "select $1 + $2"
-
+      assert get_function_def("mix") =~ "select $1 + $2"
       assert function_exists?("mix")
     end
 
@@ -176,8 +175,7 @@ defmodule FamiliarTest do
         Familiar.create_function(:mix, version: 2)
       end)
 
-      get_function_def("mix") =~ "select $1 * $2"
-
+      assert get_function_def("mix") =~ "select $1 * $2"
       assert function_exists?("mix")
     end
 
@@ -194,9 +192,75 @@ defmodule FamiliarTest do
     end
   end
 
-  test "update_function"
-  test "replace_function"
-  test "drop_function"
+  describe "update_function" do
+    test "can update function" do
+      forwards(fn ->
+        Familiar.create_function(:mix, version: 1)
+        Familiar.update_function(:mix, version: 2)
+      end)
+
+      assert function_exists?("mix")
+      assert get_function_def("mix") =~ "select $1 * $2"
+    end
+
+    test "can revert updating function" do
+      forwards(fn ->
+        Familiar.create_function(:mix, version: 2)
+      end)
+
+      backwards(fn ->
+        Familiar.update_function(:mix, version: 2, revert: 1)
+      end)
+
+      assert function_exists?("mix")
+      assert get_function_def("mix") =~ "select $1 + $2"
+    end
+  end
+
+  describe "replace_function" do
+    test "can replace function" do
+      forwards(fn ->
+        Familiar.create_function(:mix, version: 1)
+        Familiar.replace_function(:mix, version: 2)
+      end)
+
+      assert function_exists?("mix")
+      assert get_function_def("mix") =~ "select $1 * $2"
+    end
+
+    test "can revert replacing function" do
+      forwards(fn ->
+        Familiar.create_function(:mix, version: 2)
+      end)
+
+      backwards(fn ->
+        Familiar.replace_function(:mix, version: 2, revert: 1)
+      end)
+
+      assert function_exists?("mix")
+      assert get_function_def("mix") =~ "select $1 + $2"
+    end
+  end
+
+  describe "drop_function" do
+    test "can drop function" do
+      forwards(fn ->
+        Familiar.create_function(:mix, version: 1)
+        Familiar.drop_function(:mix)
+      end)
+
+      refute function_exists?("mix")
+    end
+
+    test "can revert dropping function" do
+      backwards(fn ->
+        Familiar.drop_function(:mix, revert: 1)
+      end)
+
+      assert function_exists?("mix")
+      assert get_function_def("mix") =~ "select $1 + $2"
+    end
+  end
 
   defp forwards(code) do
     run(code, :forward)

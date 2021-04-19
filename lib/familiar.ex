@@ -125,6 +125,22 @@ defmodule Familiar do
     end
   end
 
+  def drop_function(function_name, opts \\ []) do
+    function_name = normalise_name(function_name)
+    revert = Keyword.get(opts, :revert)
+
+    if revert do
+      old_sql = read_file(:functions, function_name, revert)
+
+      execute(
+        drop_function_sql(function_name),
+        create_function_sql(function_name, old_sql)
+      )
+    else
+      execute(drop_function_sql(function_name))
+    end
+  end
+
   defp normalise_name(view_name) do
     "#{view_name}"
   end
