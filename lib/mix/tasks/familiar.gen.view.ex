@@ -15,7 +15,9 @@ defmodule Mix.Tasks.Familiar.Gen.View do
 
     case OptionParser.parse!(args, strict: @switches) do
       {opts, [name]} ->
-        dir = Path.join(source_repo_priv(hd(repos)), "views")
+        repo = hd(repos)
+        ensure_repo(repo, args)
+        dir = Path.join(source_repo_priv(repo), "views")
 
         {version, contents} = get_version(name, dir, opts)
         filename = "#{name}_v#{version}.sql"
