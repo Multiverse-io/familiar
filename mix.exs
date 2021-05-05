@@ -12,7 +12,10 @@ defmodule Familiar.MixProject do
       start_permanent: Mix.env() == :prod,
       package: package(),
       deps: deps(),
-      source_url: @scm_url
+      source_url: @scm_url,
+      description: """
+      Ecto helpers for creating database views and functions
+      """
     ]
   end
 
@@ -37,7 +40,8 @@ defmodule Familiar.MixProject do
 
   defp package do
     [
-      links: %{"GitHub" => @scm_url} 
+      links: %{"GitHub" => @scm_url},
+      licenses: ["MIT"]
     ]
   end
 end
