@@ -10,6 +10,7 @@ defmodule Familiar.DataCase do
 
   setup tags do
     :ok = Sandbox.checkout(Familiar.Repo)
+
     unless tags[:async] do
       Sandbox.mode(Familiar.Repo, {:shared, self()})
     end
