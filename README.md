@@ -1,5 +1,7 @@
 # Familiar
 
+[![Build Status](https://github.com/Multiverse-io/familiar/workflows/CI/badge.svg)](https://github.com/Multiverse-io/familiar/actions) [![Hex.pm](https://img.shields.io/hexpm/v/familiar.svg)](https://hex.pm/packages/familiar)
+
 An Elixir library to manage database views, functions and triggers - your database's familiars.
 
 Creating a view is as simple as defining it in SQL and then creating it in a migration.
