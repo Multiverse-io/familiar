@@ -1,6 +1,8 @@
 defmodule Familiar.MixProject do
   use Mix.Project
 
+  @scm_url "https://github.com/Multiverse-io/familiar"
+
   def project do
     [
       app: :familiar,
@@ -8,7 +10,9 @@ defmodule Familiar.MixProject do
       elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      package: package(),
+      deps: deps(),
+      source_url: @scm_url
     ]
   end
 
@@ -26,7 +30,14 @@ defmodule Familiar.MixProject do
   defp deps do
     [
       {:ecto_sql, "~> 3.0"},
-      {:postgrex, ">= 0.0.0", optional: true}
+      {:postgrex, ">= 0.0.0", only: :test},
+      {:ex_doc, "~> 0.24", only: :dev, runtime: false}
+    ]
+  end
+
+  defp package do
+    [
+      links: %{"GitHub" => @scm_url} 
     ]
   end
 end
