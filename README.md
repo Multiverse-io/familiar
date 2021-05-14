@@ -53,7 +53,7 @@ Familiar can be installed by adding `familiar` to your list of dependencies in `
 ```elixir
 def deps do
   [
-    {:familiar, "~> 0.1.0"}
+    {:familiar, "~> 0.1.1"}
   ]
 end
 ```
