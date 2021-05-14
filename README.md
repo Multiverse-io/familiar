@@ -12,6 +12,12 @@ SELECT * FROM users
 WHERE users.active
 ```
 
+There's also a mix task to create a view with an incrementing version number.
+
+```
+mix familiar.gen.view active_users
+```
+
 ``` elixir
 # priv/repo/migrations/create_users_view.exs
 

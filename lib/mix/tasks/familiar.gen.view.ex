@@ -4,6 +4,27 @@ defmodule Mix.Tasks.Familiar.Gen.View do
   import Mix.Ecto
   import Mix.EctoSQL
 
+  @shortdoc "Creates a new view definition file"
+
+  @moduledoc """
+  Creates a new view definition file.
+
+  If no view with that name currently exists, an empty file version 1 of the
+  view will be created.
+
+  If one does exist, a new file will be created with an incremented version
+  number and a copy of the contents of the previous latest version.
+
+  ## Examples
+
+      mix familiar.gen.view my_view
+      mix familiar.gen.view my_view --version 1
+
+  ## Command line options
+
+    * `--version` - specify the version to create
+  """
+
   @switches [
     version: :integer
   ]

@@ -2,11 +2,12 @@ defmodule Familiar.MixProject do
   use Mix.Project
 
   @scm_url "https://github.com/Multiverse-io/familiar"
+  @version "0.1.0"
 
   def project do
     [
       app: :familiar,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.11",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -15,21 +16,20 @@ defmodule Familiar.MixProject do
       source_url: @scm_url,
       description: """
       Ecto helpers for creating database views and functions
-      """
+      """,
+      docs: docs()
     ]
   end
 
   defp elixirc_paths(:test), do: ["lib", "test"]
   defp elixirc_paths(_), do: ["lib"]
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
       extra_applications: [:logger, :postgrex, :ecto]
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
       {:ecto_sql, "~> 3.0"},
@@ -42,6 +42,15 @@ defmodule Familiar.MixProject do
     [
       links: %{"GitHub" => @scm_url},
       licenses: ["MIT"]
+    ]
+  end
+
+  defp docs do
+    [
+      main: "Familiar",
+      source_ref: "v#{@version}",
+      canonical: "https://hexdocs.pm/familiar",
+      source_url: @scm_url
     ]
   end
 end
