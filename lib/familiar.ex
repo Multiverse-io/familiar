@@ -1,5 +1,4 @@
 defmodule Familiar do
-
   @moduledoc """
   Helper functions for creating database views and functions - your database's
   familiars.
@@ -75,12 +74,13 @@ defmodule Familiar do
     view_name = normalise_name(view_name)
     version = Keyword.fetch!(opts, :version)
     materialized = Keyword.get(opts, :materialized, false)
+    schema = Keyword.get(opts, :schema)
 
-    new_sql = read_file(:views, view_name, version)
+    new_sql = read_file(:views, view_name, version, schema)
 
     execute(
-      create_view_sql(view_name, new_sql, materialized),
-      drop_view_sql(view_name, materialized)
+      create_view_sql(view_name, new_sql, materialized, schema),
+      drop_view_sql(view_name, materialized, schema)
     )
   end
 
@@ -101,19 +101,20 @@ defmodule Familiar do
 
     version = Keyword.fetch!(opts, :version)
     materialized = Keyword.get(opts, :materialized, false)
+    schema = Keyword.get(opts, :schema)
     revert = Keyword.get(opts, :revert)
 
-    new_sql = read_file(:views, view_name, version)
+    new_sql = read_file(:views, view_name, version, schema)
 
     if revert do
-      old_sql = read_file(:views, view_name, revert)
+      old_sql = read_file(:views, view_name, revert, schema)
 
       execute(
-        drop_and_create_view(view_name, new_sql, materialized),
-        drop_and_create_view(view_name, old_sql, materialized)
+        drop_and_create_view(view_name, new_sql, materialized, schema),
+        drop_and_create_view(view_name, old_sql, materialized, schema)
       )
     else
-      execute(drop_and_create_view(view_name, new_sql, materialized))
+      execute(drop_and_create_view(view_name, new_sql, materialized, schema))
     end
   end
 
@@ -132,16 +133,20 @@ defmodule Familiar do
     view_name = normalise_name(view_name)
 
     version = Keyword.fetch!(opts, :version)
+    schema = Keyword.get(opts, :schema)
     revert = Keyword.get(opts, :revert)
 
-    new_sql = read_file(:views, view_name, version)
+    new_sql = read_file(:views, view_name, version, schema)
 
     if revert do
-      old_sql = read_file(:views, view_name, revert)
+      old_sql = read_file(:views, view_name, revert, schema)
 
-      execute(replace_view_sql(view_name, new_sql), replace_view_sql(view_name, old_sql))
+      execute(
+        replace_view_sql(view_name, new_sql, schema),
+        replace_view_sql(view_name, old_sql, schema)
+      )
     else
-      execute(replace_view_sql(view_name, new_sql))
+      execute(replace_view_sql(view_name, new_sql, schema))
     end
   end
 
@@ -155,17 +160,18 @@ defmodule Familiar do
   def drop_view(view_name, opts \\ []) do
     revert = Keyword.get(opts, :revert)
     view_name = normalise_name(view_name)
+    schema = Keyword.get(opts, :schema)
     materialized = Keyword.get(opts, :materialized, false)
 
     if revert do
-      sql = read_file(:views, view_name, revert)
+      sql = read_file(:views, view_name, revert, schema)
 
       execute(
-        drop_view_sql(view_name, materialized),
-        create_view_sql(view_name, sql, materialized)
+        drop_view_sql(view_name, materialized, schema),
+        create_view_sql(view_name, sql, materialized, schema)
       )
     else
-      execute(drop_view_sql(view_name, materialized))
+      execute(drop_view_sql(view_name, materialized, schema))
     end
   end
 
@@ -179,11 +185,12 @@ defmodule Familiar do
     function_name = normalise_name(function_name)
 
     version = Keyword.fetch!(opts, :version)
-    new_sql = read_file(:functions, function_name, version)
+    schema = Keyword.get(opts, :schema)
+    new_sql = read_file(:functions, function_name, version, schema)
 
     execute(
-      create_function_sql(function_name, new_sql),
-      drop_function_sql(function_name)
+      create_function_sql(function_name, new_sql, schema),
+      drop_function_sql(function_name, schema)
     )
   end
 
@@ -201,19 +208,20 @@ defmodule Familiar do
     function_name = normalise_name(function_name)
 
     version = Keyword.fetch!(opts, :version)
+    schema = Keyword.get(opts, :schema)
     revert = Keyword.get(opts, :revert)
 
-    new_sql = read_file(:functions, function_name, version)
+    new_sql = read_file(:functions, function_name, version, schema)
 
     if revert do
-      old_sql = read_file(:functions, function_name, revert)
+      old_sql = read_file(:functions, function_name, revert, schema)
 
       execute(
-        drop_and_create_function(function_name, new_sql),
-        drop_and_create_function(function_name, old_sql)
+        drop_and_create_function(function_name, new_sql, schema),
+        drop_and_create_function(function_name, old_sql, schema)
       )
     else
-      execute(drop_and_create_function(function_name, new_sql))
+      execute(drop_and_create_function(function_name, new_sql, schema))
     end
   end
 
@@ -231,19 +239,20 @@ defmodule Familiar do
     function_name = normalise_name(function_name)
 
     version = Keyword.fetch!(opts, :version)
+    schema = Keyword.get(opts, :schema)
     revert = Keyword.get(opts, :revert)
 
-    new_sql = read_file(:functions, function_name, version)
+    new_sql = read_file(:functions, function_name, version, schema)
 
     if revert do
-      old_sql = read_file(:functions, function_name, revert)
+      old_sql = read_file(:functions, function_name, revert, schema)
 
       execute(
-        replace_function_sql(function_name, new_sql),
-        replace_function_sql(function_name, old_sql)
+        replace_function_sql(function_name, new_sql, schema),
+        replace_function_sql(function_name, old_sql, schema)
       )
     else
-      execute(replace_function_sql(function_name, new_sql))
+      execute(replace_function_sql(function_name, new_sql, schema))
     end
   end
 
@@ -255,17 +264,18 @@ defmodule Familiar do
   """
   def drop_function(function_name, opts \\ []) do
     function_name = normalise_name(function_name)
+    schema = Keyword.get(opts, :schema)
     revert = Keyword.get(opts, :revert)
 
     if revert do
-      old_sql = read_file(:functions, function_name, revert)
+      old_sql = read_file(:functions, function_name, revert, schema)
 
       execute(
-        drop_function_sql(function_name),
-        create_function_sql(function_name, old_sql)
+        drop_function_sql(function_name, schema),
+        create_function_sql(function_name, old_sql, schema)
       )
     else
-      execute(drop_function_sql(function_name))
+      execute(drop_function_sql(function_name, schema))
     end
   end
 
@@ -293,42 +303,54 @@ defmodule Familiar do
     fn -> Ecto.Migration.repo().query!(sql) end
   end
 
-  defp create_view_sql(view_name, sql, materialized) do
+  defp create_view_sql(view_name, sql, materialized, schema) do
     m = if materialized, do: "MATERIALIZED", else: ""
-    "CREATE #{m} VIEW #{view_name} AS #{sql};"
+    "CREATE #{m} VIEW #{wrap_name(view_name, schema)} AS #{sql};"
   end
 
-  defp replace_view_sql(view_name, sql) do
-    "CREATE OR REPLACE VIEW #{view_name} AS #{sql};"
+  defp replace_view_sql(view_name, sql, schema) do
+    "CREATE OR REPLACE VIEW #{wrap_name(view_name, schema)} AS #{sql};"
   end
 
-  defp drop_view_sql(view_name, materialized) do
+  defp drop_view_sql(view_name, materialized, schema) do
     m = if materialized, do: "MATERIALIZED", else: ""
-    "DROP #{m} VIEW #{view_name};"
+    "DROP #{m} VIEW #{wrap_name(view_name, schema)};"
   end
 
-  defp drop_and_create_view(view_name, sql, materialized) do
-    [drop_view_sql(view_name, materialized), create_view_sql(view_name, sql, materialized)]
+  defp drop_and_create_view(view_name, sql, materialized, schema) do
+    [
+      drop_view_sql(view_name, materialized, schema),
+      create_view_sql(view_name, sql, materialized, schema)
+    ]
   end
 
-  defp create_function_sql(function_name, sql) do
-    "CREATE FUNCTION #{function_name} #{sql};"
+  defp create_function_sql(function_name, sql, schema) do
+    "CREATE FUNCTION #{wrap_name(function_name, schema)} #{sql};"
   end
 
-  defp replace_function_sql(function_name, sql) do
-    "CREATE OR REPLACE FUNCTION #{function_name} #{sql};"
+  defp replace_function_sql(function_name, sql, schema) do
+    "CREATE OR REPLACE FUNCTION #{wrap_name(function_name, schema)} #{sql};"
   end
 
-  defp drop_function_sql(function_name) do
-    "DROP FUNCTION #{function_name}"
+  defp drop_function_sql(function_name, schema) do
+    "DROP FUNCTION #{wrap_name(function_name, schema)}"
   end
 
-  defp drop_and_create_function(function_name, sql) do
-    [drop_function_sql(function_name), create_function_sql(function_name, sql)]
+  defp wrap_name(name, schema) when not is_nil(schema) do
+    ~s|"#{schema}"."#{name}"|
   end
 
-  defp read_file(type, view_name, version) do
-    File.read!(make_dir(type) <> "/#{view_name}_v#{version}.sql")
+  defp wrap_name(name, nil) do
+    ~s|"#{name}"|
+  end
+
+  defp drop_and_create_function(function_name, sql, schema) do
+    [drop_function_sql(function_name, schema), create_function_sql(function_name, sql, schema)]
+  end
+
+  defp read_file(type, view_name, version, schema) do
+    schema_str = if schema, do: "#{schema}/", else: ""
+    File.read!(make_dir(type) <> "/#{schema_str}#{view_name}_v#{version}.sql")
   end
 
   defp make_dir(type) do

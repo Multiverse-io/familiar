@@ -6,8 +6,11 @@ defmodule FamiliarTest do
   alias Familiar.Repo
 
   setup do
-    query!("DROP SCHEMA public CASCADE")
+    query!("DROP SCHEMA IF EXISTS public CASCADE")
     query!("CREATE SCHEMA public")
+
+    query!("DROP SCHEMA IF EXISTS bi CASCADE")
+    query!("CREATE SCHEMA bi")
 
     query!("""
     CREATE TABLE animals (
@@ -58,6 +61,22 @@ defmodule FamiliarTest do
       end)
 
       assert materialized_view_exists?("chickens")
+    end
+
+    test "view name is quoted" do
+      forwards(fn ->
+        Familiar.create_view(:view, version: 1)
+      end)
+
+      assert view_exists?("view")
+    end
+
+    test "can create view in non default schema" do
+      forwards(fn ->
+        Familiar.create_view(:chicken_analytics, version: 1, schema: "bi")
+      end)
+
+      assert view_exists?("chicken_analytics", schema: "bi")
     end
   end
 
@@ -190,6 +209,14 @@ defmodule FamiliarTest do
 
       refute function_exists?("mix")
     end
+
+    test "can create function in non default schema" do
+      forwards(fn ->
+        Familiar.create_function(:analytical_mix, version: 1, schema: :bi)
+      end)
+
+      assert function_exists?("analytical_mix", schema: "bi")
+    end
   end
 
   describe "update_function" do
@@ -294,20 +321,33 @@ defmodule FamiliarTest do
     definition
   end
 
-  defp view_exists?(view_name) do
+  defp view_exists?(view_name, opts \\ []) do
+    schema = Keyword.get(opts, :schema, "public")
+
     Repo.exists?(
-      from(v in "pg_views", where: v.viewname == ^view_name and v.schemaname == "public")
+      from(v in "pg_views", where: v.viewname == ^view_name and v.schemaname == ^schema)
     )
   end
 
-  defp materialized_view_exists?(view_name) do
+  defp materialized_view_exists?(view_name, opts \\ []) do
+    schema = Keyword.get(opts, :schema, "public")
+
     Repo.exists?(
-      from(mv in "pg_matviews", where: mv.matviewname == ^view_name and mv.schemaname == "public")
+      from(mv in "pg_matviews", where: mv.matviewname == ^view_name and mv.schemaname == ^schema)
     )
   end
 
-  defp function_exists?(function_name) do
-    Repo.exists?(from(p in "pg_proc", where: p.proname == ^function_name))
+  defp function_exists?(function_name, opts \\ []) do
+    schema = Keyword.get(opts, :schema, "public")
+
+    Repo.exists?(
+      from(p in "pg_proc",
+        where: p.proname == ^function_name,
+        inner_join: ns in "pg_namespace",
+        on: ns.oid == p.pronamespace,
+        where: ns.nspname == ^schema
+      )
+    )
   end
 
   defp query!(sql) do
