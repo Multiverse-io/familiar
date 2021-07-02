@@ -22,11 +22,13 @@ defmodule Mix.Tasks.Familiar.Gen.View do
 
   ## Command line options
 
-    * `--version` - specify the version to create
+    * `--version` - the version to create
+    * `--schema` - the schema to create the view in
   """
 
   @switches [
-    version: :integer
+    version: :integer,
+    schema: :string
   ]
 
   @impl true
@@ -38,7 +40,7 @@ defmodule Mix.Tasks.Familiar.Gen.View do
       {opts, [name]} ->
         repo = hd(repos)
         ensure_repo(repo, args)
-        dir = Path.join(source_repo_priv(repo), "views")
+        dir = make_dir(repo, Keyword.get(opts, :schema))
 
         {version, contents} = get_version(name, dir, opts)
         filename = "#{name}_v#{version}.sql"
@@ -46,6 +48,14 @@ defmodule Mix.Tasks.Familiar.Gen.View do
         path = "#{dir}/#{filename}"
         create_file(path, contents)
     end
+  end
+
+  defp make_dir(repo, schema) when not is_nil(schema) do
+    Path.join(make_dir(repo, nil), schema)
+  end
+
+  defp make_dir(repo, nil) do
+    Path.join(source_repo_priv(repo), "views")
   end
 
   defp get_version(name, dir, opts) do
