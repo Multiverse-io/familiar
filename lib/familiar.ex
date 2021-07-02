@@ -55,6 +55,15 @@ defmodule Familiar do
       end
 
   The `:revert` option is optional however if it is omitted the migration will not be reversible.
+
+  ### Non default schema
+
+  Definition to be created in the non default schema can be placed in
+  a subdirectory with the name of the schema. For example
+  `priv/repo/views/bi/analytics_v1.sql` will create a the `analytics`
+  view in the `bi` schema.
+
+  The `:schema` option then needs to be added to each function call.
   """
 
   defmacro __using__(_opts) do
@@ -69,6 +78,7 @@ defmodule Familiar do
   ## Options:
     * `:version` - the version of the view to create
     * `:materialized` - whether the view is materialized or not. Defaults to `false`.
+    * `:schema` - the schema to create the view in. Creates in default schema if not specified
   """
   def create_view(view_name, opts) do
     view_name = normalise_name(view_name)
@@ -95,6 +105,7 @@ defmodule Familiar do
     * `:version` - the version of the updated view
     * `:materialized` - whether the view is materialized or not. Defaults to `false`.
     * `:revert` - the version to revert to if the migration is rolled back
+    * `:schema` - the schema the view lives in. Uses default schema if not specified
   """
   def update_view(view_name, opts) do
     view_name = normalise_name(view_name)
@@ -128,6 +139,7 @@ defmodule Familiar do
     * `:version` - the version of the updated view
     * `:materialized` - whether the view is materialized or not. Defaults to `false`.
     * `:revert` - the version to revert to if the migration is rolled back
+    * `:schema` - the schema the view lives in. Uses default schema if not specified
   """
   def replace_view(view_name, opts) do
     view_name = normalise_name(view_name)
@@ -156,6 +168,7 @@ defmodule Familiar do
   ## Options:
     * `:materialized` - whether the view is materialized or not. Defaults to `false`.
     * `:revert` - the version to create if the migration is rolled back
+    * `:schema` - the schema the view lives in. Uses default schema if not specified
   """
   def drop_view(view_name, opts \\ []) do
     revert = Keyword.get(opts, :revert)
@@ -180,6 +193,7 @@ defmodule Familiar do
 
   ## Options:
     * `:version` - the version of the function to create
+    * `:schema` - the schema to create the function in. Uses default schema if not specified
   """
   def create_function(function_name, opts) do
     function_name = normalise_name(function_name)
@@ -203,6 +217,7 @@ defmodule Familiar do
   ## Options:
     * `:version` - the version of the updated function
     * `:revert` - the version to revert to if the migration is rolled back
+    * `:schema` - the schema the function lives in. Uses default schema if not specified
   """
   def update_function(function_name, opts) do
     function_name = normalise_name(function_name)
@@ -234,6 +249,7 @@ defmodule Familiar do
   ## Options:
     * `:version` - the version of the updated function
     * `:revert` - the version to revert to if the migration is rolled back
+    * `:schema` - the schema the function lives in. Uses default schema if not specified
   """
   def replace_function(function_name, opts) do
     function_name = normalise_name(function_name)
@@ -261,6 +277,7 @@ defmodule Familiar do
 
   ## Options:
     * `:revert` - the version to create if the migration is rolled back
+    * `:schema` - the schema the function lives in. Uses default schema if not specified
   """
   def drop_function(function_name, opts \\ []) do
     function_name = normalise_name(function_name)
