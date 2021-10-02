@@ -16,7 +16,8 @@ defmodule FamiliarTest do
     CREATE TABLE animals (
       species varchar(255) NOT NULL,
       age integer NOT NULL,
-      alive boolean NOT NULL
+      alive boolean NOT NULL,
+      new_species varchar(255)
     )
     """)
 
@@ -179,8 +180,37 @@ defmodule FamiliarTest do
     end
   end
 
-  describe "create_function" do
-    test "can create function" do
+  describe "create_function/3" do
+    defp function_sql do
+      """
+      (integer, integer) RETURNS integer
+      AS 'select $1 + $2;'
+      LANGUAGE SQL
+      IMMUTABLE
+      RETURNS NULL ON NULL INPUT
+      """
+    end
+
+    test "can create function from a SQL snippet" do
+      forwards(fn ->
+        Familiar.create_function("foobar", function_sql())
+      end)
+
+      assert get_function_def("foobar") =~ "select $1 + $2"
+      assert function_exists?("foobar")
+    end
+
+    test "can create function from a SQL snippet in the specified schema" do
+      forwards(fn ->
+        Familiar.create_function("foobar", function_sql(), schema: :bi)
+      end)
+
+      assert function_exists?("foobar", schema: "bi")
+    end
+  end
+
+  describe "create_function/2" do
+    test "can create function from a function definition file" do
       forwards(fn ->
         Familiar.create_function(:mix, version: 1)
       end)

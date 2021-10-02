@@ -195,15 +195,27 @@ defmodule Familiar do
     * `:version` - the version of the function to create
     * `:schema` - the schema to create the function in. Uses default schema if not specified
   """
-  def create_function(function_name, opts) do
-    function_name = normalise_name(function_name)
-
+  def create_function(function_name, opts) when is_list(opts) do
     version = Keyword.fetch!(opts, :version)
     schema = Keyword.get(opts, :schema)
     new_sql = read_file(:functions, function_name, version, schema)
 
+    create_function(function_name, new_sql, opts)
+  end
+
+  @doc """
+  Creates a new database function using the given SQL snippet.
+
+  ## Options:
+    * `:schema` - the schema to create the function in. Uses default schema if not specified
+  """
+  def create_function(function_name, sql, opts \\ []) when is_binary(sql) do
+    function_name = normalise_name(function_name)
+
+    schema = Keyword.get(opts, :schema)
+
     execute(
-      create_function_sql(function_name, new_sql, schema),
+      create_function_sql(function_name, sql, schema),
       drop_function_sql(function_name, schema)
     )
   end
