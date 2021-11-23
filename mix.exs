@@ -2,7 +2,7 @@ defmodule Familiar.MixProject do
   use Mix.Project
 
   @scm_url "https://github.com/Multiverse-io/familiar"
-  @version "0.1.2"
+  @version "0.1.3"
 
   def project do
     [
