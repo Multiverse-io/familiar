@@ -56,6 +56,10 @@ defmodule Familiar do
 
   The `:revert` option is optional however if it is omitted the migration will not be reversible.
 
+  The new version number can be specified explicitly if desired:
+
+      $ mix familiar.gen.view my_view --version 3
+
   ### Non default schema
 
   Definition to be created in the non default schema can be placed in
@@ -64,6 +68,7 @@ defmodule Familiar do
   view in the `bi` schema.
 
   The `:schema` option then needs to be added to each function call.
+  The `--schema` option can be also be passed to `familiar.gen.view`.
   """
 
   defmacro __using__(_opts) do
