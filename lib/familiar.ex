@@ -33,7 +33,7 @@ defmodule Familiar do
         use Familiar
 
         def change do
-          create_view :active_users
+          create_view :active_users, version: 1
         end
       end
 
@@ -50,7 +50,7 @@ defmodule Familiar do
         use Familiar
 
         def change do
-          update_view :active_users, revert: 1
+          update_view :active_users, version: 2, revert: 1
         end
       end
 
