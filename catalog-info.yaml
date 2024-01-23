@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: familiar
+  description: Ecto helpers for creating database views and functions
+  annotations:
+    github.com/project-slug: Multiverse-io/familiar
+  tags:
+    - elixir
+  links:
+    - url: https://github.com/Multiverse-io/familiar
+spec:
+  type: library
+  owner: pumped-squids
+  lifecycle: production

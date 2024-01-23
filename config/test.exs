@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :familiar,
   ecto_repos: [Familiar.Repo]
